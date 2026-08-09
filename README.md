@@ -33,9 +33,13 @@ flowchart LR
     subgraph FE["FRONTEND — Flutter app"]
         direction TB
         F["Data layer<br/>StudyDataRepository · PreferencesRepository"]
+        L["Logic layer<br/>study_filter · study_grouping"]
         G["State layer<br/>HomeScreen"]
         H["UI layer<br/>Sidebar · ResultsList · DetailPanel"]
-        F --> G --> H
+        F --> G
+        L --> G
+        L --> H
+        G --> H
     end
 
     A --> B
@@ -45,7 +49,7 @@ flowchart LR
     classDef store fill:#fff,stroke:#333,stroke-width:2px,color:#000
     classDef tier fill:#f7f7f7,stroke:#666,stroke-width:1px,color:#000
     class A,E store
-    class B,C,D,F,G,H tier
+    class B,C,D,F,L,G,H tier
     style BE fill:#fff,stroke:#999,stroke-width:1px,stroke-dasharray: 4 4,color:#000
     style FE fill:#fff,stroke:#999,stroke-width:1px,stroke-dasharray: 4 4,color:#000
     linkStyle default stroke:#555,stroke-width:1.5px
@@ -80,6 +84,14 @@ cd backend && source .venv/bin/activate && python -m ingest.build
 cd .. && cp backend/output/study_items.json assets/data/study_items.json
 ```
 
+That copy is the whole interface between the two halves and is easy to
+forget — the app then ships stale content with no warning. After
+re-running the pipeline, verify the two files are in sync:
+
+```bash
+diff -q backend/output/study_items.json assets/data/study_items.json
+```
+
 ## Features
 
 - **Subject sidebar** — derived from whatever subjects are in the
@@ -108,6 +120,9 @@ lib/
 ├── main.dart                        # App entry point, theme wiring
 ├── models/
 │   └── study_item.dart              # StudyItem data model + fromJson
+├── logic/
+│   ├── study_filter.dart            # Pure three-axis filter (subject, category, search)
+│   └── study_grouping.dart          # Results-list row grouping (Unit/AoS/Glossary) + card headlines
 ├── data/
 │   ├── study_data_repository.dart   # Loads assets/data/study_items.json
 │   └── preferences_repository.dart  # Persists completion status + dark mode
@@ -116,7 +131,7 @@ lib/
 │   ├── category_colors.dart         # Per-category accent colors
 │   └── theme_model.dart             # ChangeNotifier for theme state
 ├── screens/
-│   └── home_screen.dart             # Three-pane layout + filtering logic
+│   └── home_screen.dart             # Three-pane layout, state, filter wiring
 └── widgets/
     ├── sidebar.dart                  # Subject list
     ├── search_bar_widget.dart
@@ -172,8 +187,10 @@ and a `toggleTheme()` method).
 - Completion status + dark-mode preference persist via
   `PreferencesRepository`; everything else is in-memory `setState`,
   re-read fresh from the bundled asset every launch.
-- Fixed three-column desktop layout (220px sidebar, 35%-width detail
-  panel); not adapted for phone-sized screens.
+- Three-column desktop layout (220px sidebar, 35%-width detail panel)
+  with responsive breakpoints: the sidebar drops below 700px and the
+  detail panel below 980px. Built desktop-first; no touch/gesture
+  adaptations for phones.
 - Plain-language rewrites are rule-based (extractive + substitution +
   clause-splitting), not true paraphrasing — see
   [backend/README.md](backend/README.md) for known limitations.
