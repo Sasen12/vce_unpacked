@@ -3,6 +3,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_model.dart';
 
+/// Right-edge slide-out panel with the app's settings (the dark-mode
+/// switch) and the version/about footer. Opened via the static
+/// [SettingsSlideout.show], which animates it in from the right edge
+/// over a dimmed, tappable-to-dismiss barrier.
 class SettingsSlideout extends StatefulWidget {
   final ThemeModel themeModel;
 

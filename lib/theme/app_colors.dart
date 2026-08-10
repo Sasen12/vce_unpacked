@@ -19,6 +19,11 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.statsBg,
   });
 
+  // Palette values are Apple's system colors — the same ones the rest of
+  // the app's macOS-native design language borrows (F5F5F7 group
+  // background, white card, E5E5EA separator, 1C1C1E label text, 8E8E93
+  // secondary text), so the app reads as built with the platform palette
+  // rather than a hand-picked substitute.
   static const light = AppColors(
     surfaceBg: Color(0xFFF5F5F7),
     cardBg: Colors.white,
@@ -29,6 +34,8 @@ class AppColors extends ThemeExtension<AppColors> {
     statsBg: Color(0xFFF2F2F7),
   );
 
+  // Dark mode mirrors the same roles with the standard dark-system
+  // equivalents (pure-black surface, #1C1C1E card, brighter borders).
   static const dark = AppColors(
     surfaceBg: Color(0xFF000000),
     cardBg: Color(0xFF1C1C1E),

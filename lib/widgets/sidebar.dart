@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
+/// Left-hand subject selector: a fixed-width (220 px) vertical list, one
+/// row per subject, with the active subject highlighted by an inset
+/// accent capsule. Purely presentational — the parent owns which subject
+/// is selected and what happens on tap.
 class Sidebar extends StatelessWidget {
   final List<String> subjects;
   final String? selectedSubject;

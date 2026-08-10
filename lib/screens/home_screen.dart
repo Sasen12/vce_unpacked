@@ -19,7 +19,7 @@ import '../widgets/loading_screen.dart';
 ///
 /// Implements a three-column macOS-style layout:
 ///   1. Sidebar — subject list (fixed 220 px).
-///   2. Centre — search bar, category pills, scrollable result cards,flutt
+///   2. Centre — search bar, category pills, scrollable result cards,
 ///      and a footer showing the result count.
 ///   3. Detail panel — shows the selected item's official text and
 ///      plain-language explanation (35 % of window width).
@@ -138,12 +138,16 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  // Bumped on every filter run and forwarded as the results list's
+  // ValueKey — a changed key makes the ListView throw away its state,
+  // so a re-filter both drops stale recycled rows and resets the scroll
+  // position to the top of the new result set.
+  int _filterGeneration = 0;
+
   /// Re-runs the in-memory filter against [_items] and writes the result
   /// into [_filteredItems].  Three axes are ANDed together (subject,
   /// category, full-text search) by the shared, unit-tested
   /// [filterItems] helper in lib/logic/study_filter.dart.
-  int _filterGeneration = 0;
-
   void _applyFilters() {
     setState(() {
       _filterGeneration++;

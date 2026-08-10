@@ -111,9 +111,11 @@ class _SubGroupHeader extends StatelessWidget {
   }
 }
 
-/// A short, clean one-line headline for a card — not the full preview
-/// text truncated wherever the 2nd line happens to run out. Lives in
-/// lib/logic/study_grouping.dart so the UI and unit tests share it.
+/// A result card row: category-colored left stripe, a headline (the
+/// item's real title when it has one, else the derived short headline —
+/// see [cardHeadline] in lib/logic/study_grouping.dart, shared with the
+/// unit tests), a plain-language preview, and a "Completed" checkmark
+/// for marked-done items.
 class _ItemCard extends StatefulWidget {
   final StudyItem item;
   final bool isSelected;

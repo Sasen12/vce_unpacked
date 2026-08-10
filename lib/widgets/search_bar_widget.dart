@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
+/// The full-text search field above the results list.
+///
+/// The clear (✕) button's visibility is read straight from
+/// [controller.text] at build time rather than kept in local state —
+/// that only works because the parent screen rebuilds this widget on
+/// every keystroke. Clearing here also goes through the parent's
+/// debounced path (a ~200ms wait before the filter actually re-runs),
+/// unlike the footer's "Clear" link, which cancels the debounce and
+/// applies immediately — two clears, two behaviours.
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
