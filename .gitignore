@@ -102,3 +102,6 @@ app.*.symbols
 
 # Aider / editor tooling artifacts (not part of the app)
 .aider*
+
+# Local Claude session handoff (never publish)
+guide.md
