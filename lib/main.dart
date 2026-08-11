@@ -101,7 +101,12 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<List<String>> _loadSubjects() async {
-    final items = await widget.studyDataRepository.loadItems();
+    // Small minimum splash delay so the loading spinner actually shows
+    // instead of flashing for a frame — parsing the JSON is fast enough
+    // that it would otherwise blink in and out.
+    final itemsFuture = widget.studyDataRepository.loadItems();
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    final items = await itemsFuture;
     return items.map((i) => i.subject).toSet().toList()..sort();
   }
 

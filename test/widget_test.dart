@@ -25,8 +25,7 @@ void main() {
         studyDataRepository: _FakeStudyDataRepository(),
       ),
     );
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // The login gate — not the main app — is the first screen, seeded with
     // the two demo accounts.

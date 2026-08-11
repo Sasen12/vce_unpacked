@@ -53,8 +53,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
 
     await tester.pumpWidget(_app());
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // Login screen shows the two demo accounts.
     expect(find.text('Demo Student'), findsOneWidget);
@@ -80,8 +79,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
 
     await tester.pumpWidget(_app());
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Demo Friend'));
     await tester.pumpAndSettle();
@@ -100,8 +98,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
 
     await tester.pumpWidget(_app());
-    await tester.pump();
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     await tester.tap(find.text('Create account'));
     await tester.pumpAndSettle();
