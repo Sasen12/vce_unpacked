@@ -72,10 +72,11 @@ Inside the backend pipeline:
 6. `build.py` — writes the combined result to `output/study_items.json`.
 7. Copy that file over `assets/data/study_items.json` (manual step) and the Flutter app picks it up at next launch.
 
-No LLM, no API calls anywhere in the backend — scikit-learn
-(TF-IDF/cosine similarity) and spaCy (`en_core_web_sm`, a small
-statistical parser) only. Full explanation of each stage, known
-limitations, and fixed bugs is in [backend/README.md](backend/README.md).
+No LLM, no API calls anywhere in the backend — nltk (sentence
+tokenization), scikit-learn (TF-IDF/cosine similarity) and spaCy
+(`en_core_web_sm`, a small statistical parser) only. Full explanation
+of each stage, known limitations, and fixed bugs is in
+[backend/README.md](backend/README.md).
 
 To refresh the dataset after adding/updating source files:
 
