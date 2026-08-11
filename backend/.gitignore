@@ -2,9 +2,9 @@
 __pycache__/
 *.pyc
 
-# Raw VCAA study design files are copyrighted source material — don't
-# commit them. Only the derived output/*.json (the transformed,
-# simplified dataset) is meant to be tracked.
-source_docs/*.docx
-source_docs/*.pdf
+# Raw VCAA study design files are committed so the pipeline runs on a
+# fresh clone. Only the derived output/*.json (the transformed,
+# simplified dataset) is what the app ships.
+!source_docs/*.docx
+!source_docs/*.pdf
 !source_docs/subjects.json
