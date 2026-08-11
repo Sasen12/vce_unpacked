@@ -251,9 +251,12 @@ flutter pub get
 flutter run
 ```
 
-Platform scaffolding for Android/iOS/web/macOS/Linux/Windows is
-included. `flutter devices` to list targets, `flutter run -d macos` /
-`-d chrome` / etc. to target one.
+Scaffolding is included for macOS and Windows only, the two desktop
+platforms the app targets. `flutter devices` to list targets, then
+`flutter run -d macos` / `-d windows` to pick one.
+
+Removed platforms (Android/iOS/Linux/web) can be regenerated at any time
+with `flutter create . --platforms=android,ios,linux,web`.
 
 ### Run the backend pipeline
 
