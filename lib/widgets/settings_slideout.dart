@@ -1,18 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import '../models/user_account.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_model.dart';
 
-/// Right-edge slide-out panel with the app's settings (the dark-mode
-/// switch) and the version/about footer. Opened via the static
-/// [SettingsSlideout.show], which animates it in from the right edge
-/// over a dimmed, tappable-to-dismiss barrier.
+/// Right-edge slide-out panel with the app's settings: the active user,
+/// subject editing + log out, the dark-mode switch, and the version/about
+/// footer. Opened via the static [SettingsSlideout.show], which animates
+/// it in from the right edge over a dimmed, tappable-to-dismiss barrier.
 class SettingsSlideout extends StatefulWidget {
   final ThemeModel themeModel;
+  final UserAccount account;
 
-  const SettingsSlideout({super.key, required this.themeModel});
+  // Handed up from HomeScreen (which got them from AuthGate): reopening the
+  // subject picker and returning to the login screen both require shell
+  // state, so the slideout just forwards the taps.
+  final VoidCallback? onLogout;
+  final VoidCallback? onEditSubjects;
 
-  static void show(BuildContext context, ThemeModel themeModel) {
+  const SettingsSlideout({
+    super.key,
+    required this.themeModel,
+    required this.account,
+    this.onLogout,
+    this.onEditSubjects,
+  });
+
+  static void show(
+    BuildContext context,
+    ThemeModel themeModel, {
+    required UserAccount account,
+    VoidCallback? onLogout,
+    VoidCallback? onEditSubjects,
+  }) {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -29,7 +49,12 @@ class SettingsSlideout extends StatefulWidget {
             ),
             child: Align(
               alignment: Alignment.centerRight,
-              child: SettingsSlideout(themeModel: themeModel),
+              child: SettingsSlideout(
+                themeModel: themeModel,
+                account: account,
+                onLogout: onLogout,
+                onEditSubjects: onEditSubjects,
+              ),
             ),
           ),
       transitionBuilder: (ctx, anim, _, child) {
@@ -121,6 +146,70 @@ class _SettingsSlideoutState extends State<SettingsSlideout> {
                 ],
               ),
             ),
+            // Active user: emoji avatar + name + subject count.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: context.statsBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.borderStrong,
+                        width: 0.5,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        widget.account.icon,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.account.username,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: context.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${widget.account.subjects.length} subject${widget.account.subjects.length == 1 ? '' : 's'}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: context.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            _SettingsEntry(
+              icon: Icons.subject,
+              label: 'My subjects',
+              onTap: widget.onEditSubjects,
+            ),
+            _SettingsEntry(
+              icon: Icons.logout,
+              label: 'Log out',
+              onTap: widget.onLogout,
+            ),
+            Divider(height: 1, color: context.border),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: Row(
@@ -166,6 +255,52 @@ class _SettingsSlideoutState extends State<SettingsSlideout> {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// One tappable action row inside the settings slideout. Tapping pops the
+/// slideout first, then fires the callback so the target screen (subject
+/// picker, login screen) opens cleanly on top of HomeScreen.
+class _SettingsEntry extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+
+  const _SettingsEntry({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap == null
+          ? null
+          : () {
+              Navigator.of(context).pop();
+              onTap!();
+            },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: context.textSecondary),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(fontSize: 14, color: context.textPrimary),
+            ),
+            const Spacer(),
+            Icon(
+              Icons.chevron_right,
+              size: 16,
+              color: context.textSecondary,
             ),
           ],
         ),

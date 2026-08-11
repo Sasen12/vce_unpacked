@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import '../logic/study_filter.dart';
 import '../models/study_item.dart';
+import '../models/user_account.dart';
 import '../data/study_data_repository.dart';
 import '../data/preferences_repository.dart';
 import '../widgets/sidebar.dart';
@@ -39,7 +41,24 @@ class HomeScreen extends StatefulWidget {
   // returning fixture items instead.
   final StudyDataRepository? repository;
 
-  const HomeScreen({super.key, required this.themeModel, this.repository});
+  // The logged-in user. Their chosen [UserAccount.subjects] scope every
+  // axis of this screen (sidebar, categories, search, completion count).
+  final UserAccount account;
+
+  // Wired from AuthGate so Settings can hand control back to the shell:
+  // [onEditSubjects] reopens the subject picker, [onLogout] drops the
+  // active user and returns to the login screen.
+  final VoidCallback? onLogout;
+  final VoidCallback? onEditSubjects;
+
+  const HomeScreen({
+    super.key,
+    required this.themeModel,
+    required this.account,
+    this.repository,
+    this.onLogout,
+    this.onEditSubjects,
+  });
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -97,14 +116,32 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadItems();
   }
 
+  @override
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The subject list may change if the user edits it in Settings, which
+    // is a rebuild triggered by AuthGate. Reload items whenever it changes
+    // so the sidebar and completion state stay in sync with the new list.
+    if (!identical(widget.account.subjects, oldWidget.account.subjects) &&
+        !listEquals(widget.account.subjects, oldWidget.account.subjects)) {
+      _loadItems();
+    }
+  }
+
   Future<void> _loadItems() async {
     try {
       final results = await Future.wait([
         _repository.loadItems(),
-        _preferences.loadCompletedIds(),
+        _preferences.loadCompletedIds(widget.account.username),
       ]);
-      final items = results[0] as List<StudyItem>;
+      final allItems = results[0] as List<StudyItem>;
       final completedIds = results[1] as Set<String>;
+      // Only the subjects this account selected are shown — the sidebar,
+      // category pills, completion count, and search all derive from
+      // [_items], so filtering here keeps every axis scoped to the user.
+      final items = allItems
+          .where((item) => widget.account.subjects.contains(item.subject))
+          .toList();
       // The dataset itself is re-read fresh from the bundled asset
       // every launch (it's not user data), but which items a student
       // has marked complete IS user data — restore that onto the
@@ -205,13 +242,21 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedItem!.isCompleted = completed;
     });
     _preferences.saveCompletedIds(
+      widget.account.username,
       _items.where((i) => i.isCompleted).map((i) => i.id).toSet(),
     );
   }
 
-  /// Opens the settings slideout panel from the right edge.
+  /// Opens the settings slideout panel from the right edge, passing it the
+  /// active user and the shell callbacks for editing subjects / logging out.
   void _openSettings() {
-    SettingsSlideout.show(context, widget.themeModel);
+    SettingsSlideout.show(
+      context,
+      widget.themeModel,
+      account: widget.account,
+      onLogout: widget.onLogout,
+      onEditSubjects: widget.onEditSubjects,
+    );
   }
 
   String get _emptyMessage {

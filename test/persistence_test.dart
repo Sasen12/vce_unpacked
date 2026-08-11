@@ -6,15 +6,19 @@ import 'package:vce_unpacked/theme/theme_model.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('PreferencesRepository round-trips completed ids', () async {
+  test('PreferencesRepository round-trips completed ids per account', () async {
     SharedPreferences.setMockInitialValues({});
     final repo = PreferencesRepository();
 
-    expect(await repo.loadCompletedIds(), isEmpty);
+    expect(await repo.loadCompletedIds('alice'), isEmpty);
 
-    await repo.saveCompletedIds({'sd-outcome-1', 'sd-key-knowledge-3'});
-    final loaded = await repo.loadCompletedIds();
-    expect(loaded, {'sd-outcome-1', 'sd-key-knowledge-3'});
+    await repo.saveCompletedIds('alice', {'sd-outcome-1', 'sd-key-knowledge-3'});
+    expect(
+      await repo.loadCompletedIds('alice'),
+      {'sd-outcome-1', 'sd-key-knowledge-3'},
+    );
+    // Completion is scoped per account: Bob can't see Alice's progress.
+    expect(await repo.loadCompletedIds('bob'), isEmpty);
   });
 
   test('PreferencesRepository round-trips dark mode', () async {

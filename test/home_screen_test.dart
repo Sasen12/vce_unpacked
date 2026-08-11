@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vce_unpacked/data/study_data_repository.dart';
 import 'package:vce_unpacked/models/study_item.dart';
+import 'package:vce_unpacked/models/user_account.dart';
 import 'package:vce_unpacked/screens/home_screen.dart';
 import 'package:vce_unpacked/theme/app_colors.dart';
 import 'package:vce_unpacked/theme/theme_model.dart';
@@ -15,6 +16,16 @@ class _FakeStudyDataRepository extends StudyDataRepository {
   @override
   Future<List<StudyItem>> loadItems() async => items;
 }
+
+// An account whose subjects match every fixture item, so the default
+// fixtures behave exactly as they did before accounts existed.
+UserAccount _allSubjectsAccount() => UserAccount(
+      username: 'Test Student',
+      passwordHash: 'hash',
+      salt: 'salt',
+      icon: '🦊',
+      subjects: const ['General Mathematics', 'Physics'],
+    );
 
 List<StudyItem> _fixtureItems() {
   return [
@@ -62,6 +73,7 @@ void main() {
         theme: ThemeData.light().copyWith(extensions: [AppColors.light]),
         home: HomeScreen(
           themeModel: ThemeModel(),
+          account: _allSubjectsAccount(),
           repository: _FakeStudyDataRepository(_fixtureItems()),
         ),
       ),
@@ -87,6 +99,7 @@ void main() {
         theme: ThemeData.light().copyWith(extensions: [AppColors.light]),
         home: HomeScreen(
           themeModel: ThemeModel(),
+          account: _allSubjectsAccount(),
           repository: _FakeStudyDataRepository(_fixtureItems()),
         ),
       ),
@@ -134,6 +147,7 @@ void main() {
         theme: ThemeData.light().copyWith(extensions: [AppColors.light]),
         home: HomeScreen(
           themeModel: ThemeModel(),
+          account: _allSubjectsAccount(),
           repository: _FakeStudyDataRepository(_fixtureItems()),
         ),
       ),
@@ -158,6 +172,37 @@ void main() {
     expect(pill('All'), findsOneWidget);
     expect(find.text('Outcome 1'), findsOneWidget);
     expect(find.text('The traits of light.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('subjects outside the account list are filtered out',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData.light().copyWith(extensions: [AppColors.light]),
+        home: HomeScreen(
+          themeModel: ThemeModel(),
+          account: UserAccount(
+            username: 'Physics Only',
+            passwordHash: 'hash',
+            salt: 'salt',
+            icon: '🦊',
+            subjects: const ['Physics'],
+          ),
+          repository: _FakeStudyDataRepository(_fixtureItems()),
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    // General Mathematics isn't one of the account's subjects, so its
+    // sidebar entry and items must be absent entirely.
+    expect(find.text('Physics'), findsOneWidget);
+    expect(find.text('General Mathematics'), findsNothing);
+    expect(find.text('Work out equations.'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

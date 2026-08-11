@@ -11,8 +11,8 @@ runs at app runtime:
 - **`backend/`** — offline Python pipeline. Converts source
   `.docx`/`.pdf` study design files into `study_items.json`. Run
   manually. See [backend/README.md](backend/README.md).
-- **`lib/`** — Flutter app. Reads the bundled `study_items.json` at
-  startup.
+- **`lib/`** — Flutter app. Shows a fully local login screen, then reads
+  the bundled `study_items.json` at startup.
 
 ## Architecture
 
@@ -32,10 +32,10 @@ flowchart LR
 
     subgraph FE["FRONTEND — Flutter app"]
         direction TB
-        F["Data layer<br/>StudyDataRepository · PreferencesRepository"]
+        F["Data layer<br/>StudyDataRepository · PreferencesRepository · AccountRepository"]
         L["Logic layer<br/>study_filter · study_grouping"]
-        G["State layer<br/>HomeScreen"]
-        H["UI layer<br/>Sidebar · ResultsList · DetailPanel"]
+        G["State layer<br/>AuthGate · HomeScreen"]
+        H["UI layer<br/>LoginScreen · Sidebar · ResultsList · DetailPanel"]
         F --> G
         L --> G
         L --> H
@@ -94,8 +94,14 @@ diff -q backend/output/study_items.json assets/data/study_items.json
 
 ## Features
 
-- **Subject sidebar** — derived from whatever subjects are in the
-  bundled dataset, not hardcoded.
+- **Local login** — every launch shows a fully local account picker
+  (no network). Two demo accounts are seeded automatically on first
+  use. Tap your icon, enter your password, and go.
+- **Subject selection** — each user chooses their own subset of
+  subjects at account creation, and can change them at any time from
+  Settings.
+- **Subject sidebar** — derived from the logged-in user's chosen
+  subjects, not from the full dataset.
 - **Search** — full-text, across title/official text/plain-language
   text, debounced 200ms.
 - **Category filter** — segmented control (Outcome / Key Knowledge /
@@ -109,28 +115,35 @@ diff -q backend/output/study_items.json assets/data/study_items.json
 - **Detail panel** — official text + plain-language rewrite side by
   side; shows a note instead of a duplicate when there's nothing to
   simplify; toggle to mark an item complete.
-- **Completion tracking** — toolbar chip, persisted via
+- **Per-account completion tracking** — each user's completed items
+  are persisted independently under `SharedPreferences`, scoped by
+  username.
+- **Light/dark theme** — global device preference, persisted via
   `SharedPreferences`.
-- **Light/dark theme** — persisted via `SharedPreferences`.
 
 ## Project structure
 
 ```
 lib/
-├── main.dart                        # App entry point, theme wiring
+├── main.dart                        # App entry point, theme wiring, AuthGate
 ├── models/
-│   └── study_item.dart              # StudyItem data model + fromJson
+│   ├── study_item.dart              # StudyItem data model + fromJson
+│   └── user_account.dart            # UserAccount data model + fromJson/copyWith
 ├── logic/
 │   ├── study_filter.dart            # Pure three-axis filter (subject, category, search)
 │   └── study_grouping.dart          # Results-list row grouping (Unit/AoS/Glossary) + card headlines
 ├── data/
 │   ├── study_data_repository.dart   # Loads assets/data/study_items.json
-│   └── preferences_repository.dart  # Persists completion status + dark mode
+│   ├── preferences_repository.dart  # Per-account completion status + global dark mode
+│   └── account_repository.dart      # Local accounts, SHA-256 password hashing, demo defaults
 ├── theme/
 │   ├── app_colors.dart              # Light/dark color tokens
 │   ├── category_colors.dart         # Per-category accent colors
 │   └── theme_model.dart             # ChangeNotifier for theme state
 ├── screens/
+│   ├── login_screen.dart            # Every-launch account picker + password gate
+│   ├── account_setup_screen.dart    # Name + password + emoji, routes to subject selection
+│   ├── subject_selection_screen.dart# Reusable multi-select subject checklist
 │   └── home_screen.dart             # Three-pane layout, state, filter wiring
 └── widgets/
     ├── sidebar.dart                  # Subject list
@@ -138,7 +151,7 @@ lib/
     ├── category_tabs.dart            # Segmented-control category filter
     ├── results_list.dart             # Grouped, filtered result cards (ListView.builder)
     ├── detail_panel.dart             # Selected item detail view
-    ├── settings_slideout.dart        # Theme toggle panel
+    ├── settings_slideout.dart        # User info, subject editing, log out, theme toggle
     └── loading_screen.dart           # Startup loading state
 assets/data/
 └── study_items.json                 # Generated dataset (copied from backend/output/)
@@ -181,12 +194,17 @@ and a `toggleTheme()` method).
   Command Term). Every subject has Command Term data — its own embedded
   glossary where the study design has one, otherwise the shared one.
 - Category pills (Outcome / Key Knowledge / Key Skill / Command Term)
-  are derived from each subject's data, not hardcoded; switching
-  subject resets the filter when the previous category doesn't exist
-  for it.
-- Completion status + dark-mode preference persist via
-  `PreferencesRepository`; everything else is in-memory `setState`,
-  re-read fresh from the bundled asset every launch.
+  are derived from each selected subject's data, not hardcoded;
+  switching subject resets the filter when the previous category
+  doesn't exist for it.
+- Login is fully local/offline. The first launch seeds two demo
+  accounts: `Demo Student` / `demo123` and `Demo Friend` / `friend123`.
+  User accounts store a salted SHA-256 password hash, emoji icon, and
+  chosen subject list in `SharedPreferences`.
+- Completion status persists per account via `PreferencesRepository`;
+  dark mode is a global device preference. The active login session is
+  only in memory, so reopening the app always returns to the login
+  screen.
 - Three-column desktop layout (220px sidebar, 35%-width detail panel)
   with responsive breakpoints: the sidebar drops below 700px and the
   detail panel below 980px. Built desktop-first; no touch/gesture
