@@ -5,6 +5,11 @@ searchable, plain-language browser: pick a subject, filter by
 outcome/key knowledge/key skill/command term, see official wording next
 to a plain-language rewrite.
 
+This is my VCE software-development project, so it's a bit of a
+Frankenstein: two completely separate halves glued together by one JSON
+file. Both halves run fully offline, and everything you need to run them
+is in this repo.
+
 Two parts, connected only by a generated JSON file, the backend never
 runs at app runtime:
 
@@ -58,7 +63,8 @@ flowchart LR
 The two sides never talk to each other directly, `study_items.json` is
 the entire interface. The backend doesn't run when the app runs, and
 the app has no code path back into the backend; it only ever reads
-that one file, once, at startup.
+that one file, once, at startup. (That separation is honestly the only
+reason this project stayed manageable.)
 
 Inside the backend pipeline:
 
@@ -86,8 +92,9 @@ cd .. && cp backend/output/study_items.json assets/data/study_items.json
 ```
 
 That copy is the whole interface between the two halves and is easy to
-forget, the app then ships stale content with no warning. After
-re-running the pipeline, verify the two files are in sync:
+forget, the app then ships stale content with no warning. I've definitely
+forgotten this mid-project more than once, so after re-running the
+pipeline, verify the two files are in sync:
 
 ```bash
 diff -q backend/output/study_items.json assets/data/study_items.json
@@ -145,7 +152,8 @@ the key `user_accounts`:
 passwords are scrambled (hashed), not saved as plain text, but this
 isn't the level of security a bank or website would use. And since only
 the scrambled version is stored, a forgotten password can't be recovered
-or reset from inside the app.
+or reset from inside the app. (Learn from me: pick a password you won't
+forget.)
 
 ## Project structure
 
@@ -253,7 +261,9 @@ flutter run
 
 Scaffolding is included for macOS and Windows only, the two desktop
 platforms the app targets. `flutter devices` to list targets, then
-`flutter run -d macos` / `-d windows` to pick one.
+`flutter run -d macos` / `-d windows` to pick one. On a school Mac the
+macOS path is the easiest, on a school PC Windows is the one to use
+(it's also the platform I demo'd in class).
 
 Removed platforms (Android/iOS/Linux/web) can be regenerated at any time
 with `flutter create . --platforms=android,ios,linux,web`.
@@ -300,3 +310,6 @@ expansion) and known limitations: [backend/README.md](backend/README.md).
 ```bash
 flutter test
 ```
+
+45 tests, covers the login flow, search, grouping, and the results list.
+They pass on my machine, and they should pass on a fresh clone too.

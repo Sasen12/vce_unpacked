@@ -8,7 +8,9 @@ This is an **offline pipeline**, not a running server: you run it
 locally whenever you have new/updated study design files, then copy the
 output over the Flutter app's bundled asset (`../assets/data/study_items.json`)
 and commit both. The Flutter app just reads that JSON at startup, it
-never talks to this code at runtime.
+never talks to this code at runtime. (I say "pipeline" because it
+sounds cool, but really it's just "run this whenever the study designs
+change".)
 
 ```
 source_docs/          <- the committed .docx / .pdf study design files
@@ -51,19 +53,22 @@ The first run downloads NLTK's sentence-tokenizer data automatically
 (needs network access once; cached under `~/nltk_data` after that).
 spaCy's model is a separate, explicit download step (`en_core_web_sm`,
 ~13MB), `pip install spacy` only installs the library, not a language
-model.
+model. These two downloads are the only times this whole thing touches
+the internet, after that it's fully offline.
 
 ## Usage
 
 1. Drop your source files into `source_docs/` (e.g.
-   `software_development.docx`, `data_analytics.pdf`). The shared VCAA
-   "Glossary of command terms" (`GlossaryOfCommandTerms.docx`) is a
+   `software_development.docx`, `data_analytics.pdf`). Or don't bother
+   hunting for the files — the ones I used are already committed, so a
+   fresh clone can run the pipeline as-is (see the reproducibility note
+   below). The shared VCAA "Glossary of command terms"
+   (`GlossaryOfCommandTerms.docx`) is a
    required build input too: unlike a subject file, its rows are parsed
    and *held aside*, then copied by `attach_shared_glossary()` onto
    every subject whose study design has no embedded glossary (Applied
    Computing, Data Analytics, Software Development and English EAL keep
-   their own embedded tables). The current set of documents is already
-   committed, so a fresh clone can run the pipeline as-is.
+   their own embedded tables).
 2. If a filename doesn't cleanly title-case into the subject name you
    want shown in the app (the default: `software_development.docx` ->
    "Software Development"), add an entry to `source_docs/subjects.json`:
@@ -91,7 +96,8 @@ model.
    any file produced **0 items** (almost always means that file's
    headings don't match the patterns below and the parser needs a small
    tweak).
-5. Copy the result into the Flutter app and commit both:
+5. Copy the result into the Flutter app and commit both (this copy is
+   the step that actually ships, don't skip it):
    ```bash
    cp output/study_items.json ../assets/data/study_items.json
    ```
@@ -108,7 +114,8 @@ step 5 and commit.
 Both parsers reduce their very different source formats down to a
 common list of `RawBlock`s (a paragraph of text + a heading depth 0-5),
 so `extract_items.py` only has to understand one thing: VCAA's
-consistent document structure,
+consistent document structure (seriously, it's so uniform it's the only
+reason any of this works):
 
 ```
 Unit N                          (level 1)
@@ -161,8 +168,9 @@ partial, the fix is almost always a small regex/style-name tweak in
 ## How simplification works
 
 `simplify.py` does **not** paraphrase, scikit-learn has no text
-generation capability, it's a classical ML library. What it actually
-does, per item:
+generation capability, it's a classical ML library. (I keep having to
+say this because everyone assumes there's an AI hidden in here.
+There isn't.) What it actually does, per item:
 
 1. **Extract**, split the official text into sentences (NLTK), and if
    there's more than a couple, keep only the most representative ones
@@ -247,7 +255,8 @@ limitations:
 
 Getting genuinely fluent, reworded explanations for either limitation
 would require an LLM instead of this approach, out of scope for this
-pipeline by design.
+pipeline by design. (Also, I was trying to avoid using an AI to build
+an AI-free project. Felt wrong.)
 
 `jargon_dictionary.json` deliberately excludes VCAA command terms
 ("Analyse", "Evaluate", etc.) even though they're jargon-ish, those
