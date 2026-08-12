@@ -73,6 +73,9 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     }
     if (hasError || !mounted) return;
 
+    // The account isn't created until subject selection returns — if the
+    // user cancels the picker, nothing is written, so no half-finished
+    // account can ever exist.
     final subjects = await Navigator.of(context).push<List<String>>(
       MaterialPageRoute(
         builder:

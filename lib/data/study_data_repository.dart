@@ -9,7 +9,11 @@ import '../models/study_item.dart';
 class StudyDataRepository {
   static const _assetPath = 'assets/data/study_items.json';
 
-  /// Inputs: —. Outputs: `List<StudyItem>` — every item in the dataset.
+  /// Reads the whole bundled dataset into memory. [StudyItem.fromJson]
+  /// gives every item `isCompleted: false` regardless of what the JSON
+  /// carries — the file is static content, and completion is user data
+  /// restored separately by HomeScreen from SharedPreferences, so the
+  /// two never read the same field.
   Future<List<StudyItem>> loadItems() async {
     final raw = await rootBundle.loadString(_assetPath);
     final decoded = jsonDecode(raw) as List<dynamic>;

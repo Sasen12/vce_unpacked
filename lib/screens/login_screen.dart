@@ -66,6 +66,9 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
     if (unlocked != true || !mounted) return;
+    // Re-fetch rather than logging in with the chip's copy — the subject
+    // list may have been edited in Settings while this dialog was open,
+    // and the shell should receive the freshest account.
     final latest = await widget.accountRepository.findAccount(account.username);
     if (!mounted || latest == null) return;
     widget.onLogin(latest);

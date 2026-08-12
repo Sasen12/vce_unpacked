@@ -241,6 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _selectedItem!.isCompleted = completed;
     });
+    // Fire-and-forget by design: the toggle must feel instant, and a slow
+    // disk write shouldn't stall it. Trade-off: the write is best-effort —
+    // a failed save loses the mark on next launch with no user feedback.
     _preferences.saveCompletedIds(
       widget.account.username,
       _items.where((i) => i.isCompleted).map((i) => i.id).toSet(),

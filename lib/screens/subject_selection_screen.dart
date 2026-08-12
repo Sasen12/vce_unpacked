@@ -31,6 +31,8 @@ class _SubjectSelectionScreenState extends State<SubjectSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Copy-then-sort so the caller's [availableSubjects] list is never
+    // mutated — the same list is shared by account creation and Settings.
     final sortedSubjects = widget.availableSubjects.toList()..sort();
 
     return Scaffold(

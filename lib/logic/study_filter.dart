@@ -31,7 +31,9 @@ List<StudyItem> filterItems(
     }
     if (query.isNotEmpty) {
       final q = query.trim().toLowerCase();
-      // Skip matching for whitespace-only queries to restore expected behavior.
+      // Whitespace-only queries match everything: the search axis is
+      // skipped entirely, so an all-spaces string behaves like an empty
+      // one (kept intentionally, to match the pre-extraction behaviour).
       if (q.isEmpty) return true;
       // Simple case-insensitive substring search — broad matches without
       // over-complication. The backend already normalizes text, so this is reliable.

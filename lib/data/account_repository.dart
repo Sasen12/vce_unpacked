@@ -48,6 +48,10 @@ class AccountRepository {
         .toList();
   }
 
+  // Seeds two demo accounts on a completely fresh install so the login
+  // screen has something to show before anyone has signed up — the demo
+  // credentials are printed on the login screen itself. Only runs while
+  // the store is empty; once a real account exists it's never touched.
   Future<List<UserAccount>> loadAccountsWithDemoDefaults() async {
     final accounts = await loadAccounts();
     if (accounts.isNotEmpty) return accounts;
@@ -108,6 +112,10 @@ class AccountRepository {
     );
 
     await _saveAccounts([...accounts, account]);
+    // The very first account created absorbs any completion marks left
+    // behind by the pre-account single-user version of the app, so a
+    // student upgrading doesn't lose their progress. Deliberately only
+    // when the store was empty — later accounts each get their own.
     if (accounts.isEmpty) {
       await _foldLegacyCompletedIdsInto(trimmedUsername);
     }
@@ -155,9 +163,15 @@ class AccountRepository {
   }
 
   String completedIdsKeyFor(String username) {
+    // Mirrors PreferencesRepository's key scheme — the two classes must
+    // stay in sync, since this one only exists to migrate data between
+    // keys. Prefer PreferencesRepository for new callers.
     return 'completed_item_ids_${username.trim().toLowerCase()}';
   }
 
+  // Migrates the legacy shared `completed_item_ids` blob (written before
+  // accounts existed) into the first account's per-user key, then removes
+  // it so the migration runs exactly once.
   Future<void> _foldLegacyCompletedIdsInto(String username) async {
     final prefs = await SharedPreferences.getInstance();
     final legacy = prefs.getStringList(_legacyCompletedIdsKey);
