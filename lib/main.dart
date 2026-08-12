@@ -26,8 +26,15 @@ Future<void> main() async {
   final themeModel = ThemeModel();
   // Awaited here rather than loaded lazily inside the widget tree, so
   // the app never flashes light mode and then flips to a saved dark
-  // preference on the first frame.
-  await themeModel.load();
+  // preference on the first frame. Guarded so a SharedPreferences read
+  // failure on the launching machine can't blank the window before the
+  // first frame renders — falling back to the light default is safe.
+  try {
+    await themeModel.load();
+  } catch (_) {
+    // Swallow: ThemeModel already defaults to light mode, so the app
+    // just starts with the default theme instead of failing to launch.
+  }
 
   runApp(VCEUnpackedApp(themeModel: themeModel));
 }

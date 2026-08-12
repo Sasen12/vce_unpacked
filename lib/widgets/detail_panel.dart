@@ -178,7 +178,7 @@ class _ItemDetail extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: const Color(0xFFE8F8E8),
+              color: context.successBg,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: const Color(0xFF34C759).withValues(alpha: 0.3),
@@ -208,7 +208,7 @@ class _ItemDetail extends StatelessWidget {
                             'This is already written in plain language — nothing needed simplifying.',
                             style: TextStyle(
                               fontSize: 13,
-                              color: const Color(0xFF1C1C1E),
+                              color: context.textPrimary,
                               height: 1.6,
                             ),
                           ),
@@ -217,7 +217,7 @@ class _ItemDetail extends StatelessWidget {
                     )
                     : _FormattedText(
                       text: studyItem.plainLanguageText,
-                      color: const Color(0xFF1C1C1E),
+                      color: context.textPrimary,
                     ),
           ),
           const SizedBox(height: 24),

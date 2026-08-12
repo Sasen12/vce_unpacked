@@ -6,15 +6,21 @@ import '../theme/app_colors.dart';
 /// The clear (✕) button's visibility is read straight from
 /// [controller.text] at build time rather than kept in local state —
 /// that only works because the parent screen rebuilds this widget on
-/// every keystroke. Clearing here also goes through the parent's
-/// debounced path (a ~200ms wait before the filter actually re-runs),
-/// unlike the footer's "Clear" link, which cancels the debounce and
-/// applies immediately — two clears, two behaviours.
+/// every keystroke. When the parent supplies [onClear] it takes over
+/// the button's action, so both the ✕ here and the footer's "Clear"
+/// link cancel any pending debounce and re-filter immediately —
+/// clearing is never subject to the typing debounce.
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
   final ValueChanged<String> onChanged;
+  final VoidCallback? onClear;
 
-  const SearchBarWidget({super.key, required this.controller, required this.onChanged});
+  const SearchBarWidget({
+    super.key,
+    required this.controller,
+    required this.onChanged,
+    this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +47,7 @@ class SearchBarWidget extends StatelessWidget {
                     ? null
                     : IconButton(
                         tooltip: 'Clear search',
-                        onPressed: () {
+                        onPressed: onClear ?? () {
                           controller.clear();
                           onChanged('');
                         },

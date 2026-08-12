@@ -427,6 +427,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                         SearchBarWidget(
                                           controller: _searchController,
                                           onChanged: _onSearchChanged,
+                                          // Same immediate clear the footer
+                                          // "Clear" link performs — cancels
+                                          // any pending debounce instead of
+                                          // re-scheduling another 200ms wait.
+                                          onClear: () {
+                                            _searchDebounce?.cancel();
+                                            _searchController.clear();
+                                            _applyFilters();
+                                          },
                                         ),
                                         CategoryTabs(
                                           categories: _categories,

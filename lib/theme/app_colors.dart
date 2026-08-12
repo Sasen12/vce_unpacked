@@ -8,6 +8,7 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color textPrimary;
   final Color textSecondary;
   final Color statsBg;
+  final Color successBg;
 
   const AppColors({
     required this.surfaceBg,
@@ -17,6 +18,7 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.textPrimary,
     required this.textSecondary,
     required this.statsBg,
+    required this.successBg,
   });
 
   // Palette values are Apple's system colors — the same ones the rest of
@@ -32,6 +34,11 @@ class AppColors extends ThemeExtension<AppColors> {
     textPrimary: Color(0xFF1C1C1E),
     textSecondary: Color(0xFF8E8E93),
     statsBg: Color(0xFFF2F2F7),
+    // Soft green tint used behind "success/confirmation" surfaces (the
+    // plain-language panel). Apple's system palette ships a light-green
+    // fill for this role; dark mode swaps it for a muted dark green so
+    // the panel stays identifiable without a light patch in dark mode.
+    successBg: Color(0xFFE8F8E8),
   );
 
   // Dark mode mirrors the same roles with the standard dark-system
@@ -44,6 +51,7 @@ class AppColors extends ThemeExtension<AppColors> {
     textPrimary: Color(0xFFF5F5F7),
     textSecondary: Color(0xFF8E8E93),
     statsBg: Color(0xFF2C2C2E),
+    successBg: Color(0xFF1B3A2B),
   );
 
   @override
@@ -55,6 +63,7 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? textPrimary,
     Color? textSecondary,
     Color? statsBg,
+    Color? successBg,
   }) {
     return AppColors(
       surfaceBg: surfaceBg ?? this.surfaceBg,
@@ -64,6 +73,7 @@ class AppColors extends ThemeExtension<AppColors> {
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       statsBg: statsBg ?? this.statsBg,
+      successBg: successBg ?? this.successBg,
     );
   }
 
@@ -78,6 +88,7 @@ class AppColors extends ThemeExtension<AppColors> {
       textPrimary: Color.lerp(textPrimary, other.textPrimary, t)!,
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       statsBg: Color.lerp(statsBg, other.statsBg, t)!,
+      successBg: Color.lerp(successBg, other.successBg, t)!,
     );
   }
 }
@@ -91,4 +102,5 @@ extension AppColorsBuildContext on BuildContext {
   Color get textPrimary => appColors.textPrimary;
   Color get textSecondary => appColors.textSecondary;
   Color get statsBg => appColors.statsBg;
+  Color get successBg => appColors.successBg;
 }
