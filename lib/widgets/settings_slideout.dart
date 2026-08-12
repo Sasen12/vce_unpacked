@@ -222,6 +222,11 @@ class _SettingsSlideoutState extends State<SettingsSlideout> {
                   Switch(
                     value: widget.themeModel.isDark,
                     onChanged: (_) => widget.themeModel.toggleTheme(),
+                    // activeColor was renamed to activeThumbColor in newer
+                    // Flutter, but it isn't available on the pinned local
+                    // SDK — ignore the deprecation so analyze is clean on
+                    // both the local 3.29 toolchain and CI's 3.44.
+                    // ignore: deprecated_member_use
                     activeColor: const Color(0xFF007AFF),
                   ),
                 ],
