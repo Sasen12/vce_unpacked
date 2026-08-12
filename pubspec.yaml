@@ -43,6 +43,7 @@ dependencies:
   # Pure-Dart hashing for local account passwords (SHA-256 + per-account
   # salt). Demo-grade for an offline classroom tool — not PBKDF2/bcrypt.
   crypto: ^3.0.6
+  window_manager: ^0.5.2
 
 dev_dependencies:
   flutter_test:

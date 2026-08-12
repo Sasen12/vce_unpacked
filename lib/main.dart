@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'data/account_repository.dart';
 import 'data/study_data_repository.dart';
@@ -6,12 +7,21 @@ import 'models/user_account.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/subject_selection_screen.dart';
+import 'theme/app_colors.dart';
 import 'theme/theme_model.dart';
 
 Future<void> main() async {
   // Needed before using SharedPreferences (inside ThemeModel.load())
   // this early, ahead of runApp.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Desktop window setup. Launches straight into fullscreen so the study
+  // browser takes over the whole screen (works for the local macOS build
+  // and the Windows exe produced by GitHub Actions alike).
+  await windowManager.ensureInitialized();
+  await windowManager.waitUntilReadyToShow(
+    const WindowOptions(fullScreen: true),
+  );
 
   final themeModel = ThemeModel();
   // Awaited here rather than loaded lazily inside the widget tree, so
@@ -101,11 +111,12 @@ class _AuthGateState extends State<AuthGate> {
   }
 
   Future<List<String>> _loadSubjects() async {
-    // Small minimum splash delay so the loading spinner actually shows
-    // instead of flashing for a frame — parsing the JSON is fast enough
-    // that it would otherwise blink in and out.
+    // Keep the splash up long enough to actually read it (the logo,
+    // the app name, the "Reading study content..." line) instead of
+    // letting it flash by. The real load runs in parallel underneath,
+    // so this is just a minimum hold, not extra wait on top.
     final itemsFuture = widget.studyDataRepository.loadItems();
-    await Future<void>.delayed(const Duration(milliseconds: 600));
+    await Future<void>.delayed(const Duration(milliseconds: 2500));
     final items = await itemsFuture;
     return items.map((i) => i.subject).toSet().toList()..sort();
   }
@@ -144,7 +155,7 @@ class _AuthGateState extends State<AuthGate> {
           );
         }
         if (!snapshot.hasData) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const _StartupLoading();
         }
 
         final subjects = snapshot.data!;
@@ -174,4 +185,62 @@ class _DefaultAccountRepository extends AccountRepository {
 
 class _DefaultStudyDataRepository extends StudyDataRepository {
   _DefaultStudyDataRepository();
+}
+
+/// Branded splash shown while the study dataset is read before login.
+/// Mirrors the login screen's icon + title block so startup doesn't just
+/// flash a bare spinner on a plain background.
+class _StartupLoading extends StatelessWidget {
+  const _StartupLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: context.surfaceBg,
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset(
+                  'assets/icon/app_icon.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'VCE Unpacked',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: context.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Reading study content...',
+                style: TextStyle(fontSize: 14, color: context.textSecondary),
+              ),
+              const SizedBox(height: 28),
+              const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  valueColor: AlwaysStoppedAnimation(Color(0xFF007AFF)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
