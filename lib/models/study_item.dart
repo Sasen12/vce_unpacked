@@ -4,6 +4,12 @@ class StudyItem {
   final String id;
   final String subject;
   final String title;
+  // String, not an enum: category names come straight from the backend
+  // pipeline's output (Outcome / Key Knowledge / Key Skill / Command
+  // Term today), and the UI already derives its filter pills from
+  // whatever categories are present per subject (see category_tabs.dart)
+  // rather than a fixed list — an enum here would force an app update
+  // any time the dataset introduces a new category.
   final String category;
   final String officialText;
   final String plainLanguageText;

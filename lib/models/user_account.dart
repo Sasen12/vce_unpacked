@@ -13,6 +13,10 @@ class UserAccount {
   final String passwordHash;
   final String salt;
   final String icon;
+  // List, not Set: the picker (SubjectSelectionScreen) already dedupes
+  // selection with a Set internally, but a List is what actually needs
+  // to persist here — it round-trips through JSON directly and gives the
+  // sidebar a stable display order, neither of which a Set provides.
   final List<String> subjects;
 
   const UserAccount({

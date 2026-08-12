@@ -36,6 +36,13 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     '🦋',
   ];
 
+  // Type check: letters, numbers, spaces, apostrophes and hyphens only —
+  // covers real names while rejecting stray symbols/emoji typed by mistake.
+  static final _nameTypePattern = RegExp(r"^[A-Za-z0-9 '-]+$");
+  static const _minNameLength = 2;
+  static const _maxNameLength = 24;
+  static const _minPasswordLength = 6;
+
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
   String _selectedIcon = _emojiOptions.first;
@@ -60,15 +67,43 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
     });
 
     bool hasError = false;
+
+    // Existence check.
     if (name.isEmpty) {
       setState(() => _nameError = 'Please enter a name.');
+      hasError = true;
+    }
+    // Range check.
+    else if (name.length < _minNameLength || name.length > _maxNameLength) {
+      setState(
+        () => _nameError =
+            'Name must be $_minNameLength-$_maxNameLength characters.',
+      );
+      hasError = true;
+    }
+    // Type check.
+    else if (!_nameTypePattern.hasMatch(name)) {
+      setState(
+        () => _nameError = 'Name can only contain letters, numbers, spaces, '
+            "apostrophes and hyphens.",
+      );
       hasError = true;
     } else if (await widget.accountRepository.findAccount(name) != null) {
       setState(() => _nameError = 'That name is already taken.');
       hasError = true;
     }
+
+    // Existence check.
     if (password.isEmpty) {
       setState(() => _passwordError = 'Please enter a password.');
+      hasError = true;
+    }
+    // Range check.
+    else if (password.length < _minPasswordLength) {
+      setState(
+        () => _passwordError =
+            'Password must be at least $_minPasswordLength characters.',
+      );
       hasError = true;
     }
     if (hasError || !mounted) return;
