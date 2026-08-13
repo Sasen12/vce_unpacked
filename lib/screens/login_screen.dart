@@ -63,6 +63,7 @@ class _LoginScreenState extends State<LoginScreen> {
       builder: (_) => _PasswordDialog(
         account: account,
         verifyPassword: widget.accountRepository.verifyPassword,
+        resetPassword: widget.accountRepository.resetPassword,
       ),
     );
     if (unlocked != true || !mounted) return;
@@ -271,8 +272,14 @@ class _CreateAccountChip extends StatelessWidget {
 class _PasswordDialog extends StatefulWidget {
   final UserAccount account;
   final Future<bool> Function(String username, String password) verifyPassword;
+  final Future<UserAccount> Function(String username, String newPassword)
+  resetPassword;
 
-  const _PasswordDialog({required this.account, required this.verifyPassword});
+  const _PasswordDialog({
+    required this.account,
+    required this.verifyPassword,
+    required this.resetPassword,
+  });
 
   @override
   State<_PasswordDialog> createState() => _PasswordDialogState();
@@ -280,12 +287,20 @@ class _PasswordDialog extends StatefulWidget {
 
 class _PasswordDialogState extends State<_PasswordDialog> {
   final _passwordController = TextEditingController();
+  final _newPasswordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   String? _error;
   bool _submitting = false;
+  // No identity check on top of it: this is a single-user local device app
+  // (see AccountRepository's doc comment), not a real auth boundary — a
+  // reset just needs to replace the stored hash, not prove who's typing.
+  bool _resetMode = false;
 
   @override
   void dispose() {
     _passwordController.dispose();
+    _newPasswordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -307,6 +322,28 @@ class _PasswordDialogState extends State<_PasswordDialog> {
     }
   }
 
+  Future<void> _submitReset() async {
+    if (_submitting) return;
+    if (_newPasswordController.text.isEmpty) {
+      setState(() => _error = 'Enter a new password.');
+      return;
+    }
+    if (_newPasswordController.text != _confirmPasswordController.text) {
+      setState(() => _error = "Passwords don't match.");
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _error = null;
+    });
+    await widget.resetPassword(
+      widget.account.username,
+      _newPasswordController.text,
+    );
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -323,27 +360,95 @@ class _PasswordDialogState extends State<_PasswordDialog> {
           ),
         ],
       ),
-      content: TextField(
-        controller: _passwordController,
-        autofocus: true,
-        obscureText: true,
-        decoration: InputDecoration(
-          labelText: 'Password',
-          errorText: _error,
-          border: const OutlineInputBorder(),
+      content: _resetMode ? _buildResetContent() : _buildLoginContent(),
+      actions: _resetMode ? _buildResetActions() : _buildLoginActions(),
+    );
+  }
+
+  Widget _buildLoginContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _passwordController,
+          autofocus: true,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Password',
+            errorText: _error,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => _submit(),
         ),
-        onSubmitted: (_) => _submit(),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _submitting ? null : _submit,
-          child: const Text('Log in'),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () => setState(() {
+              _resetMode = true;
+              _error = null;
+            }),
+            child: const Text('Forgot password?'),
+          ),
         ),
       ],
     );
+  }
+
+  Widget _buildResetContent() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: _newPasswordController,
+          autofocus: true,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'New password',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _confirmPasswordController,
+          obscureText: true,
+          decoration: InputDecoration(
+            labelText: 'Confirm new password',
+            errorText: _error,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => _submitReset(),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildLoginActions() {
+    return [
+      TextButton(
+        onPressed: () => Navigator.of(context).pop(false),
+        child: const Text('Cancel'),
+      ),
+      FilledButton(
+        onPressed: _submitting ? null : _submit,
+        child: const Text('Log in'),
+      ),
+    ];
+  }
+
+  List<Widget> _buildResetActions() {
+    return [
+      TextButton(
+        onPressed: () => setState(() {
+          _resetMode = false;
+          _error = null;
+        }),
+        child: const Text('Back'),
+      ),
+      FilledButton(
+        onPressed: _submitting ? null : _submitReset,
+        child: const Text('Reset & log in'),
+      ),
+    ];
   }
 }

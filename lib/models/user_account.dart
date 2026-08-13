@@ -27,11 +27,15 @@ class UserAccount {
     required this.subjects,
   });
 
-  UserAccount copyWith({List<String>? subjects}) {
+  UserAccount copyWith({
+    List<String>? subjects,
+    String? passwordHash,
+    String? salt,
+  }) {
     return UserAccount(
       username: username,
-      passwordHash: passwordHash,
-      salt: salt,
+      passwordHash: passwordHash ?? this.passwordHash,
+      salt: salt ?? this.salt,
       icon: icon,
       subjects: subjects ?? this.subjects,
     );

@@ -128,6 +128,29 @@ class AccountRepository {
     return _hashPassword(password, account.salt) == account.passwordHash;
   }
 
+  Future<UserAccount> resetPassword(String username, String newPassword) async {
+    if (newPassword.isEmpty) {
+      throw ArgumentError('Password cannot be empty.');
+    }
+    final accounts = await loadAccounts();
+    final index = accounts.indexWhere(
+      (account) =>
+          account.username.trim().toLowerCase() == username.trim().toLowerCase(),
+    );
+    if (index == -1) {
+      throw ArgumentError('Account not found.');
+    }
+
+    final salt = _newSalt();
+    final updated = accounts[index].copyWith(
+      passwordHash: _hashPassword(newPassword, salt),
+      salt: salt,
+    );
+    accounts[index] = updated;
+    await _saveAccounts(accounts);
+    return updated;
+  }
+
   Future<UserAccount> updateSubjects(String username, List<String> subjects) async {
     if (subjects.isEmpty) {
       throw ArgumentError('At least one subject must be selected.');

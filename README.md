@@ -150,10 +150,14 @@ the key `user_accounts`:
 
 **The honest bit:** this is a simple local login for a classroom tool,
 passwords are scrambled (hashed), not saved as plain text, but this
-isn't the level of security a bank or website would use. And since only
-the scrambled version is stored, a forgotten password can't be recovered
-or reset from inside the app. (Learn from me: pick a password you won't
-forget.)
+isn't the level of security a bank or website would use. Since only the
+scrambled version is stored, a forgotten password can't be *recovered*
+(there's no way to get the old one back), but it can be **reset**: the
+"Forgot password?" link on the password prompt lets you set a new one
+on the spot, no proof of identity required. That's intentional, not an
+oversight, there's nothing to authenticate against here beyond physical
+access to the device, which the login screen was never trying to guard
+against in the first place.
 
 ## Project structure
 
@@ -234,7 +238,9 @@ and a `toggleTheme()` method).
 - Login is fully local/offline. The first launch seeds two demo
   accounts: `Demo Student` / `demo123` and `Demo Friend` / `friend123`.
   User accounts store a salted SHA-256 password hash, emoji icon, and
-  chosen subject list in `SharedPreferences`.
+  chosen subject list in `SharedPreferences`. Forgotten passwords can be
+  reset from the login screen's password prompt, no identity check, it
+  just overwrites the stored hash with a fresh salt.
 - Completion status persists per account via `PreferencesRepository`;
   dark mode is a global device preference. The active login session is
   only in memory, so reopening the app always returns to the login
