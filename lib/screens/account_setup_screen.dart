@@ -41,7 +41,6 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
   static final _nameTypePattern = RegExp(r"^[A-Za-z0-9 '-]+$");
   static const _minNameLength = 2;
   static const _maxNameLength = 24;
-  static const _minPasswordLength = 6;
 
   final _nameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -93,17 +92,11 @@ class _AccountSetupScreenState extends State<AccountSetupScreen> {
       hasError = true;
     }
 
-    // Existence check.
-    if (password.isEmpty) {
-      setState(() => _passwordError = 'Please enter a password.');
-      hasError = true;
-    }
-    // Range check.
-    else if (password.length < _minPasswordLength) {
-      setState(
-        () => _passwordError =
-            'Password must be at least $_minPasswordLength characters.',
-      );
+    // Existence, range and type checks all live in AccountRepository so
+    // account creation and password reset can't drift apart.
+    final passwordError = AccountRepository.passwordError(password);
+    if (passwordError != null) {
+      setState(() => _passwordError = passwordError);
       hasError = true;
     }
     if (hasError || !mounted) return;

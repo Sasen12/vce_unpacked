@@ -324,8 +324,14 @@ class _PasswordDialogState extends State<_PasswordDialog> {
 
   Future<void> _submitReset() async {
     if (_submitting) return;
-    if (_newPasswordController.text.isEmpty) {
-      setState(() => _error = 'Enter a new password.');
+    // Same existence/range/type policy account creation uses — see
+    // AccountRepository.passwordError — so a reset can't set a password
+    // account creation would have rejected.
+    final passwordError = AccountRepository.passwordError(
+      _newPasswordController.text,
+    );
+    if (passwordError != null) {
+      setState(() => _error = passwordError);
       return;
     }
     if (_newPasswordController.text != _confirmPasswordController.text) {

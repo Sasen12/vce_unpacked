@@ -34,6 +34,38 @@ class AccountRepository {
     'Philosophy',
   ];
 
+  static const minPasswordLength = 6;
+
+  // Type check: at least one letter and one digit — rules out passwords
+  // that are just repeated symbols or whitespace, without imposing a full
+  // complexity policy for a local, offline demo tool.
+  static final _passwordTypePattern = RegExp(r'^(?=.*[A-Za-z])(?=.*\d).+$');
+
+  /// Existence, range and type checks for a candidate password. Shared by
+  /// [AccountSetupScreen] and the login screen's "forgot password" dialog
+  /// so the two entry points can't quietly validate differently.
+  ///
+  /// Deliberately NOT enforced inside [createAccount]/[resetPassword]
+  /// themselves, which keep their original existence-only guard — those
+  /// methods are exercised directly in tests with arbitrary short
+  /// passwords, and the richer policy belongs at the UI edge.
+  ///
+  /// Inputs: password (String).
+  /// Outputs: String? — a user-facing error message, or null if valid.
+  static String? passwordError(String password) {
+    // Existence check.
+    if (password.isEmpty) return 'Please enter a password.';
+    // Range check.
+    if (password.length < minPasswordLength) {
+      return 'Password must be at least $minPasswordLength characters.';
+    }
+    // Type check.
+    if (!_passwordTypePattern.hasMatch(password)) {
+      return 'Password must contain at least one letter and one number.';
+    }
+    return null;
+  }
+
   final Random _random;
 
   AccountRepository({Random? random}) : _random = random ?? Random.secure();
